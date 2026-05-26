@@ -14,9 +14,9 @@ module mock_memory (
     output logic [(DATA_WIDTH*BLOCK_SIZE)-1:0]  mem_rdata_o,
     output logic                                mem_ready_o
 );
-    // RAM: 256 blocos de 128 bits (4096 bytes). 
-    // É pequena de propósito para simular rápido e não travar o PC,
-    // mas grande o suficiente para testar a cache inteira (64 linhas).
+    // RAM: 256 blocos de 128 bits (4096 bytes) 
+    // É pequena de propósito para simular rápido e não travar o PC
+    // mas grande o suficiente para testar a cache inteira (64 linhas)
     // ~dom
     logic [(DATA_WIDTH*BLOCK_SIZE)-1:0] ram [0:255];
 
@@ -53,9 +53,9 @@ module mock_memory (
 
                     if (mem_write_i) begin
                         // LÓGICA DE ESCRITA:
-                        // Como a CPU escreve palavras de 32 bits, mas o barramento tem 128 bits,
-                        // usamos os bits [3:2] do endereço para saber qual parte do bloco atualizar,
-                        // evitando destruir o resto do bloco que já estava na memória.
+                        // Como a CPU escreve palavras de 32 bits, mas o barramento tem 128 bits
+                        // usamos os bits [3:2] do endereço para saber qual parte do bloco atualizar
+                        // evitando destruir o resto do bloco que já estava na memória
                         logic [1:0] w_offset = mem_addr_i[3:2];
 
                         if (w_offset == 2'b00) ram[block_addr][31:0]   <= mem_wdata_i[31:0];
