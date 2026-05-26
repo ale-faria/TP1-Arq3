@@ -57,12 +57,39 @@ module tb_cache;
     always #5 clk = ~clk;
 
     // 3 rotina principal de testes
+    // ---- PARA FACILITAR OS TESTES ----
+    // essas funções evitam  repitir as mesmas 10 linhas de codigo para cada leitura/escrita
+    task automatic do_read(input logic [31:0] addr);
+        $display("[%0t] READ  -> Endereco: 0x%08h", $time, addr);
+        cpu_req = 1;
+        cpu_write = 0;
+        cpu_addr = addr;
+        wait(cpu_ready == 1); // Fica travado aqui até a cache avisar que terminou
+        @(posedge clk);
+        cpu_req = 0;
+        #10;
+    endtask
+
+    task automatic do_write(input logic [31:0] addr, input logic [31:0] data);
+        $display("[%0t] WRITE -> Endereco: 0x%08h | Dado: 0x%08h", $time, addr, data);
+        cpu_req = 1;
+        cpu_write = 1;
+        cpu_addr = addr;
+        cpu_wdata = data;
+        wait(cpu_ready == 1);
+        @(posedge clk);
+        cpu_req = 0;
+        cpu_write = 0;
+        #10;
+    endtask
+
+    // ---- ROTINA PRINCIPAL DE TESTES ----
     initial begin
-        // configuração para gerar o arquivo de simulação para o GTKWave
+        // arquivo para o GTKWave
         $dumpfile("dump.vcd");
         $dumpvars(0, tb_cache);
 
-        // estado inicial (reset)
+        // 1 inicializacao (estado vazio) 
         clk = 0;
         rst_n = 0;
         cpu_req = 0;
@@ -70,60 +97,48 @@ module tb_cache;
         cpu_write = 0;
         cpu_wdata = 0;
 
-        // aguarda 15ns e desliga o reset
-        #15;
-        rst_n = 1;
+        #15 rst_n = 1;
         #10;
 
-        $display("--- INICIANDO SIMULACAO DA CACHE ---");
+        $display("\n--- INICIANDO BATERIA DE TESTES ---");
 
         // ========================================================= //
-        // TESTE 1: miss de leitura (read miss) 
-        // A cache ta vazia, pede o endereço 0x00 para a mem
+        // 7.1 testes de leitura (read path)
         // ========================================================= //
-        $display("Iniciando Teste 1: Read Miss [Endereço: 0x00000000]");
-        cpu_req = 1;
-        cpu_write = 0;
-        cpu_addr = 32'h00000000;
+        $display("\n[TESTE 7.1] Leitura - Miss seguido de Hit");
+        do_read(32'h00000000);  // MISS: busca o bloco 0 na memória
+        do_read(32'h00000000);  // HIT: ta na cache
+
+        // ========================================================= //
+        // 7.2 teste de escrita (write path)
+        // ========================================================= //
+        $display("\n[TESTE 7.2] Escrita - Hit (Write-Through) e Miss (No-Write-Allocate)");
+        // escreve em um endereço que já está na cache (Hit)
+        do_write(32'h00000004, 32'h00000207); 
         
-        // comando do testbench para esperar a cache avisar que terminou
-        wait(cpu_ready == 1); 
-        @(posedge clk);
-        cpu_req = 0; // desliga a requisição
-        #20; // pausa dramática para ver bonito na onda hehe
+        // escreve em um bloco que NÃO está na cache (Miss)
+        // pela nossa implementacao, vai direto para a mem e não traz o bloco
+        do_write(32'h00000040, 32'h000000F1); 
 
         // ========================================================= //
-        // TESTE 2: hit de leitura (read hit)
-        // Pede o MESMO endereço, a cache deve responder imediatamente
+        // 7.3 e 7.4 testes de substituição e consistência (conflito de indice)
         // ========================================================= //
-        $display("Iniciando Teste 2: Read Hit [Endereço: 0x00000000]");
-        cpu_req = 1;
-        cpu_write = 0;
-        cpu_addr = 32'h00000000;
-        
-        wait(cpu_ready == 1);
-        @(posedge clk);
-        cpu_req = 0;
-        #20;
+        $display("\n[TESTE 7.3 e 7.4] Conflito de Mapeamento (Substituicao de Bloco)")
+        // enderecos 0x00000010 e 0x00000410 mapeiam para o MESMO índice (linha 1 da cache)
+        // mas possuem tags diferentes, acessar em sequência força a expulsão do bloco
+        do_read(32'h00000010);  // MISS: carrega tag 0 na linha 1
+        do_read(32'h00000410);  // MISS: expulsa tag 0 e carrega tag 1 na linha 1
+        do_read(32'h00000010);  // MISS: expulsa tag 1 e carrega tag 0 dnv (evidência do conflito)
 
         // ========================================================= //
-        // TESTE 3: hite de escrita (write hit write-through)
-        // escreve um valor na próxima palavra do mesmo bloco
+        // 7.5 testes de casos limite
         // ========================================================= //
-        $display("Iniciando Teste 3: Write Hit [Endereço: 0x00000004]");
-        cpu_req = 1;
-        cpu_write = 1; // agora é escrita
-        cpu_addr = 32'h00000004;
-        cpu_wdata = 32'hDEADBEEF;
-        
-        wait(cpu_ready == 1);
-        @(posedge clk);
-        cpu_req = 0;
-        cpu_write = 0;
-        #20;
+        $display("\n[TESTE 7.5] Acesso a Endereco Extremo");
+        // endereço na ultima posição possível de 32 bits (alinhado a palavra)
+        do_read(32'hFFFFFFF0);
 
-        $display("--- SIMULACAO CONCLUIDA COM SUCESSO ---");
-        $finish; // encerra a simulação
+        $display("\n--- SIMULACAO CONCLUIDA COM SUCESSO ---");
+        $finish;
     end
 
 endmodule
