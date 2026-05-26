@@ -123,7 +123,7 @@ module tb_cache;
         // ========================================================= //
         // 7.3 e 7.4 testes de substituição e consistência (conflito de indice)
         // ========================================================= //
-        $display("\n[TESTE 7.3 e 7.4] Conflito de Mapeamento (Substituicao de Bloco)")
+        $display("\n[TESTE 7.3 e 7.4] Conflito de Mapeamento (Substituicao de Bloco)");
         // enderecos 0x00000010 e 0x00000410 mapeiam para o MESMO índice (linha 1 da cache)
         // mas possuem tags diferentes, acessar em sequência força a expulsão do bloco
         do_read(32'h00000010);  // MISS: carrega tag 0 na linha 1
