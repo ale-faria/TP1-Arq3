@@ -1,0 +1,22 @@
+VCD info: dumpfile dump.vcd opened for output.
+
+--- INICIANDO BATERIA DE TESTES ---
+
+[TESTE 7.1] Leitura - Miss seguido de Hit
+[25000] READ  -> Endereco: 0x00000000
+[115000] READ  -> Endereco: 0x00000000
+
+[TESTE 7.2] Escrita - Hit (Write-Through) e Miss (No-Write-Allocate)
+[135000] WRITE -> Endereco: 0x00000004 | Dado: 0x00000207
+[195000] WRITE -> Endereco: 0x00000040 | Dado: 0x000000f1
+
+[TESTE 7.3 e 7.4] Conflito de Mapeamento (Substituicao de Bloco)
+[255000] READ  -> Endereco: 0x00000010
+[345000] READ  -> Endereco: 0x00000410
+[435000] READ  -> Endereco: 0x00000010
+
+[TESTE 7.5] Acesso a Endereco Extremo
+[525000] READ  -> Endereco: 0xfffffff0
+
+--- SIMULACAO CONCLUIDA COM SUCESSO ---
+tb_cache.sv:141: $finish called at 615000 (1ps)
