@@ -11,6 +11,7 @@ Para compilar e simular este projeto no Linux, você precisará de:
 
 ## Instruções de Execução
 No terminal, dentro da pasta `src`, execute os comandos:
-1. `make compile` (Para compilar o código fonte e testbenches)
-2. `make run` (Para rodar a simulação e gerar os logs no terminal)
-3. `make view` (Para abrir as formas de onda da simulação no GTKWave)
+1. `make clean` (Para limpar os arquivos gerados pela compilação e simulação)
+2. `make compile` (Para compilar o código fonte e testbenches)
+3. `make run` (Para rodar a simulação e gerar os logs no terminal)
+4. `make view` (Para abrir as formas de onda da simulação no GTKWave)
